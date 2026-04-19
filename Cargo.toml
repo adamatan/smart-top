@@ -1,0 +1,24 @@
+[package]
+name = "smart-top"
+version = "0.1.0"
+edition = "2021"
+description = "Smart top: a TUI that diagnoses why your computer is slow and names the process responsible."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/adamatan/smart-top"
+homepage = "https://github.com/adamatan/smart-top"
+readme = "README.md"
+keywords = ["tui", "top", "sysinfo", "monitor", "diagnostics"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "stop"
+path = "src/main.rs"
+
+[dependencies]
+sysinfo = "0.32"
+ratatui = "0.29"
+crossterm = "0.28"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+libc = "0.2"

@@ -1,0 +1,6 @@
+target/
+.env
+*.pem
+*.key
+*.swp
+.DS_Store
