@@ -80,7 +80,7 @@ impl Action {
         ];
         if cfg!(target_os = "macos") {
             v.push(Action::OpenActivity); // m — investigation fallback
-            v.push(Action::Purge);        // p — system-level, occasional
+            v.push(Action::Purge); // p — system-level, occasional
         }
         v.push(Action::Usr1); // 1 — rare, app-specific
         v.push(Action::Usr2); // 2 — rare, app-specific
@@ -153,9 +153,7 @@ pub fn availability(action: Action, pids: &[u32]) -> Availability {
         Action::OpenActivity => Availability::AlwaysOk,
         _ if action.targets_pids() => {
             if pids.is_empty() {
-                return Availability::Blocked {
-                    reason: "no PIDs",
-                };
+                return Availability::Blocked { reason: "no PIDs" };
             }
             if is_root {
                 return Availability::AllOk;
@@ -348,9 +346,7 @@ fn lsof(name: &str, pids: &[u32]) -> ActionResult {
     let pid_list: Vec<String> = pids.iter().map(|p| p.to_string()).collect();
     // lsof -p accepts multiple PIDs separated by commas
     let pid_arg = pid_list.join(",");
-    let out = Command::new("lsof")
-        .args(["-p", &pid_arg])
-        .output();
+    let out = Command::new("lsof").args(["-p", &pid_arg]).output();
     match out {
         Ok(o) if o.status.success() || !o.stdout.is_empty() => {
             if let Err(e) = std::fs::write(&path, &o.stdout) {
@@ -368,7 +364,10 @@ fn lsof(name: &str, pids: &[u32]) -> ActionResult {
             ok: false,
             message: format!(
                 "✗ lsof failed: {}",
-                String::from_utf8_lossy(&o.stderr).lines().next().unwrap_or("(no output)")
+                String::from_utf8_lossy(&o.stderr)
+                    .lines()
+                    .next()
+                    .unwrap_or("(no output)")
             ),
         },
         Err(e) => ActionResult {

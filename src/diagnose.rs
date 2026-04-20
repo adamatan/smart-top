@@ -204,7 +204,11 @@ fn disk_detail(m: &Metrics) -> String {
 }
 
 fn net_detail(m: &Metrics) -> String {
-    let mut s = format!("in: {}  out: {}", fmt_bps(m.net.rx_bps), fmt_bps(m.net.tx_bps));
+    let mut s = format!(
+        "in: {}  out: {}",
+        fmt_bps(m.net.rx_bps),
+        fmt_bps(m.net.tx_bps)
+    );
     if m.net.errors + m.net.drops > 0 {
         s.push_str(&format!("  err: {}  drop: {}", m.net.errors, m.net.drops));
     }
@@ -218,9 +222,15 @@ fn net_detail(m: &Metrics) -> String {
 fn cpu_blame(m: &Metrics) -> String {
     let load_ratio = m.cpu.load1 / m.cpu.logical_cores.max(1) as f64;
     let load_str = if load_ratio > 2.0 {
-        format!("load {:.1}/{} cores: tasks queuing", m.cpu.load1, m.cpu.logical_cores)
+        format!(
+            "load {:.1}/{} cores: tasks queuing",
+            m.cpu.load1, m.cpu.logical_cores
+        )
     } else if load_ratio > 1.0 {
-        format!("load {:.1}/{} cores: oversubscribed", m.cpu.load1, m.cpu.logical_cores)
+        format!(
+            "load {:.1}/{} cores: oversubscribed",
+            m.cpu.load1, m.cpu.logical_cores
+        )
     } else {
         format!("{:.0}% total CPU", m.cpu.usage_pct)
     };
@@ -244,7 +254,10 @@ fn mem_blame(m: &Metrics) -> String {
         "ACTIVELY PAGING TO DISK".to_string()
     } else if m.mem.swap_used > 0 {
         let swap_gb = m.mem.swap_used as f64 / 1_073_741_824.0;
-        format!("{:.0}% RAM used, {:.1} GB spilled to swap", used_pct, swap_gb)
+        format!(
+            "{:.0}% RAM used, {:.1} GB spilled to swap",
+            used_pct, swap_gb
+        )
     } else {
         format!("{:.0}% RAM used", used_pct)
     };
@@ -287,7 +300,11 @@ fn net_blame(m: &Metrics) -> String {
         if mbps < 0.01 {
             "Minimal network activity".to_string()
         } else {
-            format!("In: {}  Out: {}", fmt_bps(m.net.rx_bps), fmt_bps(m.net.tx_bps))
+            format!(
+                "In: {}  Out: {}",
+                fmt_bps(m.net.rx_bps),
+                fmt_bps(m.net.tx_bps)
+            )
         }
     }
 }
@@ -306,7 +323,12 @@ fn build_blameboard(
 
     let mut seen: HashMap<String, BlameEntry> = HashMap::new();
 
-    for p in m.top_cpu.iter().chain(m.top_mem.iter()).chain(m.top_disk.iter()) {
+    for p in m
+        .top_cpu
+        .iter()
+        .chain(m.top_mem.iter())
+        .chain(m.top_disk.iter())
+    {
         let entry = seen.entry(p.name.clone()).or_insert_with(|| BlameEntry {
             name: p.name.clone(),
             count: p.count,
@@ -321,10 +343,18 @@ fn build_blameboard(
             all_pids: p.all_pids.clone(),
             all_uids: p.all_uids.clone(),
         });
-        if p.count > entry.count { entry.count = p.count; }
-        if p.cpu > entry.cpu { entry.cpu = p.cpu; }
-        if p.mem > entry.mem { entry.mem = p.mem; }
-        if p.disk_bps > entry.disk_bps { entry.disk_bps = p.disk_bps; }
+        if p.count > entry.count {
+            entry.count = p.count;
+        }
+        if p.cpu > entry.cpu {
+            entry.cpu = p.cpu;
+        }
+        if p.mem > entry.mem {
+            entry.mem = p.mem;
+        }
+        if p.disk_bps > entry.disk_bps {
+            entry.disk_bps = p.disk_bps;
+        }
         if p.max_uptime_secs > entry.max_uptime_secs {
             entry.max_uptime_secs = p.max_uptime_secs;
         }
@@ -391,7 +421,11 @@ fn build_blameboard(
     // (score >= 40 AND leads the runner-up by 20+ points) then rank
     // processes by that axis's raw magnitude so the culprits for *that*
     // bottleneck surface first. Otherwise fall back to composite impact.
-    let scores = [("CPU", cpu_score), ("MEMORY", mem_score), ("DISK", disk_score)];
+    let scores = [
+        ("CPU", cpu_score),
+        ("MEMORY", mem_score),
+        ("DISK", disk_score),
+    ];
     let mut sorted = scores;
     sorted.sort_by(|a, b| b.1.cmp(&a.1));
     let (top_label, top_score) = sorted[0];

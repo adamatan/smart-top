@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
-use sysinfo::{
-    CpuRefreshKind, MemoryRefreshKind, Networks, RefreshKind, System,
-};
+use sysinfo::{CpuRefreshKind, MemoryRefreshKind, Networks, RefreshKind, System};
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct CpuMetrics {
@@ -157,15 +155,17 @@ pub fn collect(sample_interval_ms: u64, top_n: usize) -> Metrics {
         if uptime > entry.max_uptime_secs {
             entry.max_uptime_secs = uptime;
         }
-        entry.samples.push(ProcSample { pid, cpu: cpu_pct, mem, disk_bps: proc_disk_bps });
+        entry.samples.push(ProcSample {
+            pid,
+            cpu: cpu_pct,
+            mem,
+            disk_bps: proc_disk_bps,
+        });
         entry.all_pids.push(pid);
         // Sysinfo Uid derefs to u32; 0 (root) is a safe fallback for
         // processes whose owner we can't read — they'll show as foreign
         // to a non-root user, which is the correct assumption.
-        let uid: u32 = proc
-            .user_id()
-            .map(|u| **u)
-            .unwrap_or(0);
+        let uid: u32 = proc.user_id().map(|u| **u).unwrap_or(0);
         entry.all_uids.push(uid);
 
         // Capture the command line of the process that owns the most memory
@@ -227,8 +227,16 @@ pub fn collect(sample_interval_ms: u64, top_n: usize) -> Metrics {
             swap_used: sys.used_swap(),
             swap_rate,
         },
-        disk: DiskMetrics { read_bps, write_bps },
-        net: NetMetrics { rx_bps, tx_bps, errors, drops },
+        disk: DiskMetrics {
+            read_bps,
+            write_bps,
+        },
+        net: NetMetrics {
+            rx_bps,
+            tx_bps,
+            errors,
+            drops,
+        },
         top_cpu,
         top_mem: procs,
         top_disk,

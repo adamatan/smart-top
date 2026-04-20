@@ -1,0 +1,20 @@
+[workspace]
+# cargo-dist owns GitHub Release creation (it attaches the binaries).
+# release-plz still pushes the tag, bumps Cargo.toml, and publishes to crates.io.
+git_release_enable = false
+
+[changelog]
+# A list of commit parsers to categorize commits.
+# Commits with 'skip = true' will not trigger a release or appear in the changelog.
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactor", skip = true },
+    { message = "^style", group = "Style", skip = true },
+    { message = "^test", group = "Testing", skip = true },
+    { message = "^chore", group = "Miscellaneous", skip = true },
+    { message = "^docs", group = "Documentation", skip = true },
+    { message = "^ci", group = "CI", skip = true },
+    { message = ".*", group = "Other", skip = true }, # Skip anything else not matched above
+]

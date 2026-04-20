@@ -84,20 +84,14 @@ impl UiState {
 
     fn ingest(&mut self, report: &Report) {
         for e in &report.blameboard {
-            let buf = self
-                .impact_history
-                .entry(e.name.clone())
-                .or_insert_with(VecDeque::new);
+            let buf = self.impact_history.entry(e.name.clone()).or_default();
             buf.push_back(e.impact);
             while buf.len() > HISTORY_LEN {
                 buf.pop_front();
             }
         }
         for c in &report.culprits {
-            let buf = self
-                .load_history
-                .entry(c.label.to_string())
-                .or_insert_with(VecDeque::new);
+            let buf = self.load_history.entry(c.label.to_string()).or_default();
             buf.push_back(c.score);
             while buf.len() > HISTORY_LEN {
                 buf.pop_front();
@@ -213,7 +207,7 @@ pub fn render_watch(interval_secs: u64, top_n: usize, _no_color: bool) -> io::Re
         if let Some(ref r) = report {
             terminal.draw(|f| draw(f, r, &state))?;
         } else {
-            terminal.draw(|f| draw_splash(f))?;
+            terminal.draw(draw_splash)?;
         }
 
         if event::poll(Duration::from_millis(50))? {
@@ -279,10 +273,7 @@ fn run_selected_action(action: Action, state: &mut UiState, report: &Report) {
         return;
     };
     let result = actions::apply(action, &e.name, &e.all_pids);
-    state.set_status(
-        format!("{}: {}", e.name, result.message),
-        result.ok,
-    );
+    state.set_status(format!("{}: {}", e.name, result.message), result.ok);
 }
 
 fn move_selection(state: &mut UiState, report: &Report, visible: usize, delta: i32) {
@@ -361,7 +352,6 @@ fn draw(f: &mut Frame, report: &Report, state: &UiState) {
 }
 
 fn draw_dashboard(f: &mut Frame, report: &Report, state: &UiState) {
-
     let area = f.area();
 
     let load_collapsed = report.culprits.iter().all(|c| c.score < 40);
@@ -461,12 +451,12 @@ fn draw_blameboard(f: &mut Frame, report: &Report, state: &UiState, area: Rect) 
         other => format!(" BLAMEBOARD — sorted by {} ", other.to_lowercase()),
     };
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(Span::styled(
-            title,
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-        ));
+    let block = Block::default().borders(Borders::ALL).title(Span::styled(
+        title,
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
+    ));
 
     let table = Table::new(
         rows,
@@ -540,7 +530,9 @@ fn blame_entry_row(
         e.name.clone()
     };
     let name_style = if is_critical {
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD)
     } else if is_warn {
         Style::default().fg(color).add_modifier(Modifier::BOLD)
     } else {
@@ -582,7 +574,9 @@ fn blame_entry_row(
         ),
         Span::styled(
             cpu_arrow.0,
-            Style::default().fg(cpu_arrow.1).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(cpu_arrow.1)
+                .add_modifier(Modifier::BOLD),
         ),
     ]));
 
@@ -613,7 +607,9 @@ fn blame_entry_row(
         ),
         Span::styled(
             mem_arrow.0,
-            Style::default().fg(mem_arrow.1).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(mem_arrow.1)
+                .add_modifier(Modifier::BOLD),
         ),
     ]));
 
@@ -627,8 +623,6 @@ fn blame_entry_row(
         Style::default()
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD)
-    } else if !disk_text.is_empty() {
-        Style::default().fg(Color::DarkGray)
     } else {
         Style::default().fg(Color::DarkGray)
     });
@@ -638,13 +632,7 @@ fn blame_entry_row(
     let spark_cell = Cell::from(Line::from(spark));
 
     Row::new(vec![
-        rank_cell,
-        name_cell,
-        why_cell,
-        cpu_cell,
-        mem_cell,
-        disk_cell,
-        spark_cell,
+        rank_cell, name_cell, why_cell, cpu_cell, mem_cell, disk_cell, spark_cell,
     ])
 }
 
@@ -741,8 +729,14 @@ fn draw_details(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
             out.push(Line::from(vec![
                 Span::styled("  ", Style::default()),
                 Span::styled(
-                    format!("{} process{}", e.count, if e.count == 1 { "" } else { "es" }),
-                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    format!(
+                        "{} process{}",
+                        e.count,
+                        if e.count == 1 { "" } else { "es" }
+                    ),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
                 ),
                 Span::raw("   "),
                 Span::styled("RAM: ", Style::default().fg(Color::DarkGray)),
@@ -753,13 +747,17 @@ fn draw_details(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
                         mem_pct,
                         fmt_bytes(report.total_mem)
                     ),
-                    Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
                 ),
                 Span::raw("   "),
                 Span::styled("CPU: ", Style::default().fg(Color::DarkGray)),
                 Span::styled(
                     format!("{:.1}%", e.cpu),
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
                 ),
                 Span::raw("   "),
                 Span::styled("Disk: ", Style::default().fg(Color::DarkGray)),
@@ -773,7 +771,10 @@ fn draw_details(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
                 ),
                 Span::raw("   "),
                 Span::styled("Up: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(fmt_uptime(e.max_uptime_secs), Style::default().fg(Color::Yellow)),
+                Span::styled(
+                    fmt_uptime(e.max_uptime_secs),
+                    Style::default().fg(Color::Yellow),
+                ),
             ]));
 
             let cmd = if e.cmd.is_empty() {
@@ -832,7 +833,10 @@ fn draw_details(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
 
             if e.count > shown_count {
                 out.push(Line::from(vec![Span::styled(
-                    format!("    … and {} more process(es) — press Enter to expand", e.count - shown_count),
+                    format!(
+                        "    … and {} more process(es) — press Enter to expand",
+                        e.count - shown_count
+                    ),
                     Style::default().fg(Color::DarkGray),
                 )]));
             }
@@ -846,12 +850,12 @@ fn draw_details(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
         None => " DETAILS ".to_string(),
     };
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(Span::styled(
-            title,
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-        ));
+    let block = Block::default().borders(Borders::ALL).title(Span::styled(
+        title,
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
+    ));
 
     let p = Paragraph::new(lines).block(block);
     f.render_widget(p, area);
@@ -879,7 +883,9 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
     };
     let block = Block::default().borders(Borders::ALL).title(Span::styled(
         title,
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
     ));
 
     let lines: Vec<Line> = match entry {
@@ -894,10 +900,16 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
             out.push(Line::from(vec![
                 Span::styled(
                     format!("  {} ", e.name),
-                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    format!("({} process{})", e.count, if e.count == 1 { "" } else { "es" }),
+                    format!(
+                        "({} process{})",
+                        e.count,
+                        if e.count == 1 { "" } else { "es" }
+                    ),
                     Style::default().fg(Color::Gray),
                 ),
             ]));
@@ -911,14 +923,18 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
                         mem_pct,
                         fmt_bytes(report.total_mem)
                     ),
-                    Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
                 ),
             ]));
             out.push(Line::from(vec![
                 Span::styled("  Total CPU:    ", Style::default().fg(Color::DarkGray)),
                 Span::styled(
                     format!("{:.1}%", e.cpu),
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
                 ),
             ]));
             out.push(Line::from(vec![
@@ -943,7 +959,9 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
                 Span::styled("  Why:          ", Style::default().fg(Color::DarkGray)),
                 Span::styled(
                     e.why.to_uppercase(),
-                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
                 ),
             ]));
             out.push(Line::from(""));
@@ -954,7 +972,14 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
                     .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
             )]));
             out.push(Line::from(vec![Span::styled(
-                format!("    {}", if e.cmd.is_empty() { "(unavailable)".to_string() } else { e.cmd.clone() }),
+                format!(
+                    "    {}",
+                    if e.cmd.is_empty() {
+                        "(unavailable)".to_string()
+                    } else {
+                        e.cmd.clone()
+                    }
+                ),
                 Style::default().fg(Color::Gray),
             )]));
             out.push(Line::from(""));
@@ -993,7 +1018,10 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
             }
             if e.count > e.samples.len() {
                 out.push(Line::from(vec![Span::styled(
-                    format!("    … {} additional PIDs not sampled", e.count - e.samples.len()),
+                    format!(
+                        "    … {} additional PIDs not sampled",
+                        e.count - e.samples.len()
+                    ),
                     Style::default().fg(Color::DarkGray),
                 )]));
             }
@@ -1001,7 +1029,9 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
         }
     };
 
-    let p = Paragraph::new(lines).block(block).wrap(Wrap { trim: false });
+    let p = Paragraph::new(lines)
+        .block(block)
+        .wrap(Wrap { trim: false });
     f.render_widget(p, chunks[0]);
     draw_footer(f, state, chunks[1]);
 }
@@ -1011,9 +1041,7 @@ fn draw_process_detail_fullscreen(f: &mut Frame, report: &Report, state: &UiStat
 // ---------------------------------------------------------------------------
 
 fn draw_system_load(f: &mut Frame, report: &Report, state: &UiState, area: Rect) {
-    let bar_width = (area.width.saturating_sub(4 + 10 + 4 + 4 + 14 + 12) as usize)
-        .max(8)
-        .min(40);
+    let bar_width = (area.width.saturating_sub(4 + 10 + 4 + 4 + 14 + 12) as usize).clamp(8, 40);
 
     let lines: Vec<Line> = report
         .culprits
@@ -1028,12 +1056,10 @@ fn draw_system_load(f: &mut Frame, report: &Report, state: &UiState, area: Rect)
         })
         .collect();
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(Span::styled(
-            " SYSTEM LOAD ",
-            Style::default().add_modifier(Modifier::BOLD),
-        ));
+    let block = Block::default().borders(Borders::ALL).title(Span::styled(
+        " SYSTEM LOAD ",
+        Style::default().add_modifier(Modifier::BOLD),
+    ));
     let p = Paragraph::new(lines).block(block);
     f.render_widget(p, area);
 }
@@ -1042,7 +1068,9 @@ fn draw_system_load_collapsed(f: &mut Frame, report: &Report, area: Rect) {
     // Build a compact one-line summary
     let mut spans: Vec<Span> = vec![Span::styled(
         "  ✓ ",
-        Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::Green)
+            .add_modifier(Modifier::BOLD),
     )];
     spans.push(Span::styled(
         "System load OK ",
@@ -1130,12 +1158,17 @@ fn draw_footer(f: &mut Frame, state: &UiState, area: Rect) {
 
     let halves = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Fill(1), Constraint::Length(hint.chars().count() as u16 + 2)])
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(hint.chars().count() as u16 + 2),
+        ])
         .split(area);
 
     if let Some((msg, ok)) = state.current_status() {
         let style = if ok {
-            Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
         };
@@ -1254,21 +1287,23 @@ fn draw_actions_bar(f: &mut Frame, report: &Report, state: &UiState, area: Rect)
         .alignment(Alignment::Center),
     );
 
-    let block = Block::default().borders(Borders::ALL).title(Line::from(vec![
-        Span::styled(
-            " ACTIONS ",
-            Style::default()
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::styled(
-            target,
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::raw(" "),
-    ]));
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(vec![
+            Span::styled(
+                " ACTIONS ",
+                Style::default()
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                target,
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" "),
+        ]));
 
     let p = Paragraph::new(lines).block(block);
     f.render_widget(p, area);
