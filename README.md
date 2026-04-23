@@ -6,8 +6,22 @@ Source: https://github.com/adamatan/smart-top
 
 ## Install
 
+Homebrew (macOS, Linux):
+
+```bash
+brew install adamatan/tap/smart-top
+```
+
+Cargo:
+
 ```bash
 cargo install smart-top
+```
+
+One-liner installer (downloads the prebuilt binary for your platform):
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/adamatan/smart-top/releases/latest/download/smart-top-installer.sh | sh
 ```
 
 The crate is `smart-top`, the binary is `stop`. Naming on crates.io was taken; the command you type stays short.
