@@ -3,7 +3,9 @@
 //! Each variant of `Action` corresponds to one operation that can be
 //! applied to all PIDs of a selected (aggregated) process group.
 
-use std::process::{Command, Stdio};
+use std::process::Command;
+#[cfg(target_os = "macos")]
+use std::process::Stdio;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Action {
