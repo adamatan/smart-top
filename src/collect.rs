@@ -197,7 +197,7 @@ pub fn collect(sample_interval_ms: u64, top_n: usize) -> Metrics {
             s.cpu /= cores;
         }
         // Sort samples by mem desc, keep top 5
-        p.samples.sort_by(|a, b| b.mem.cmp(&a.mem));
+        p.samples.sort_by_key(|s| std::cmp::Reverse(s.mem));
         p.samples.truncate(5);
     }
 
@@ -211,7 +211,7 @@ pub fn collect(sample_interval_ms: u64, top_n: usize) -> Metrics {
     top_disk.sort_by(|a, b| b.disk_bps.partial_cmp(&a.disk_bps).unwrap());
     top_disk.truncate(top_n);
 
-    procs.sort_by(|a, b| b.mem.cmp(&a.mem));
+    procs.sort_by_key(|p| std::cmp::Reverse(p.mem));
     procs.truncate(top_n);
 
     Metrics {

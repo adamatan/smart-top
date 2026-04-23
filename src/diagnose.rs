@@ -73,7 +73,7 @@ pub fn diagnose(m: &Metrics) -> Report {
             blame_line: net_blame(m),
         },
     ];
-    culprits.sort_by(|a, b| b.score.cmp(&a.score));
+    culprits.sort_by_key(|c| std::cmp::Reverse(c.score));
 
     let (blameboard, sort_basis) = build_blameboard(m, cpu_score, mem_score, disk_score);
     let verdict = build_verdict(&culprits, m);
@@ -427,7 +427,7 @@ fn build_blameboard(
         ("DISK", disk_score),
     ];
     let mut sorted = scores;
-    sorted.sort_by(|a, b| b.1.cmp(&a.1));
+    sorted.sort_by_key(|s| std::cmp::Reverse(s.1));
     let (top_label, top_score) = sorted[0];
     let second_score = sorted[1].1;
     let dominant_clear = top_score >= 40 && (top_score as i32 - second_score as i32) >= 20;
@@ -439,7 +439,7 @@ fn build_blameboard(
                 "CPU"
             }
             "MEMORY" => {
-                entries.sort_by(|a, b| b.mem.cmp(&a.mem));
+                entries.sort_by_key(|e| std::cmp::Reverse(e.mem));
                 "MEMORY"
             }
             "DISK" => {
@@ -447,12 +447,12 @@ fn build_blameboard(
                 "DISK"
             }
             _ => {
-                entries.sort_by(|a, b| b.impact.cmp(&a.impact));
+                entries.sort_by_key(|e| std::cmp::Reverse(e.impact));
                 "IMPACT"
             }
         }
     } else {
-        entries.sort_by(|a, b| b.impact.cmp(&a.impact));
+        entries.sort_by_key(|e| std::cmp::Reverse(e.impact));
         "IMPACT"
     };
 
