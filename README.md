@@ -1,73 +1,44 @@
 # stop
 
-Smart top. A Rust TUI that diagnoses why your computer is slow and names the process responsible. Instead of raw numbers like `htop`, it ranks subsystems (CPU, memory, disk, network) by impact, surfaces culprits with plain-English explanations, and lets you act on the guilty process with a single keypress: `k` to kill, `s` to suspend, `n` to renice, and more, without leaving the UI.
+Why is my computer slow? `stop` is a top-like utility that points to the bottleneck (CPU? memory? disk? network?), names the culprit process, and offers a quick action — `k` to kill, `s` to suspend, `n` to renice — without leaving the terminal.
 
-Source: https://github.com/adamatan/smart-top
+![stop in action](docs/screenshot-main.png)
 
 ## Install
 
-Homebrew (macOS, Linux):
-
 ```bash
 brew install adamatan/tap/smart-top
-```
-
-Cargo:
-
-```bash
+# or
 cargo install smart-top
 ```
 
-One-liner installer (downloads the prebuilt binary for your platform):
-
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/adamatan/smart-top/releases/latest/download/smart-top-installer.sh | sh
-```
-
-The crate is `smart-top`, the binary is `stop`. Naming on crates.io was taken; the command you type stays short.
-
-## Features
-
-- Ranked **Blameboard** showing who's consuming the most CPU / memory / disk, weighted by how stressed each subsystem is
-- Colored **System Load** bars with trend sparklines per subsystem
-- **Per-process drill-in** (Enter) with full command line and every sampled PID
-- **Persistent action bar**: suspend, resume, kill, force-kill, interrupt, renice, lsof, and more, one keystroke, no confirmation modal
-- Deltas (↑ / ↓) highlight what changed since the last refresh
-- Adaptive refresh: 250 ms when critical, slower when idle
-- Cross-platform: Linux and macOS
+The crate is `smart-top`; the binary is `stop`.
 
 ## Usage
 
 ```
-# Continuous watch mode (default, press q to quit)
-stop
-
-# Navigation:
-#   ↑ / ↓     inspect a process (its details appear below the blameboard)
-#   Enter     expand the selected process to fullscreen
-#   q         quit
-
-# Action keys (apply to every PID in the selected group, no confirmation):
-#   s   pause process (SIGSTOP)       r   resume (SIGCONT)
-#   k   soft kill (SIGTERM)           K   hard kill (SIGKILL, no cleanup)
-#   i   send Ctrl-C (SIGINT)          H   reload config (SIGHUP)
-#   1   SIGUSR1 (app-defined)         2   SIGUSR2 (app-defined)
-#   n   lower priority (renice +10)
-#   l   list open files (lsof to /tmp file)
-#   m   open Activity Monitor          (macOS)
-#   p   free cached RAM (purge)        (macOS)
-
-# One-shot snapshot (press any key to exit)
-stop --once
-
-# Faster refresh
-stop --interval 1
-
-# JSON output (no UI, just metrics + report)
-stop --json
+stop                # continuous watch (q to quit)
+stop --once         # one-shot snapshot
+stop --interval 1   # faster refresh
+stop --json         # metrics + diagnosis as JSON
 ```
 
-Acting on a process you don't own (kill, suspend, renice) requires the usual OS permissions. Run with `sudo` for system processes.
+Navigation: `↑`/`↓` inspect, `Enter` expand, `q` quit.
+
+Action keys (apply to every PID in the selected group, no confirmation):
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `s` | pause (SIGSTOP) | `r` | resume (SIGCONT) |
+| `k` | soft kill (SIGTERM) | `K` | hard kill (SIGKILL) |
+| `i` | Ctrl-C (SIGINT) | `H` | reload (SIGHUP) |
+| `1` | SIGUSR1 | `2` | SIGUSR2 |
+| `n` | renice +10 | `l` | lsof to /tmp |
+| `m` | Activity Monitor (macOS) | `p` | purge cache (macOS) |
+
+Acting on a process you don't own requires the usual OS permissions; run with `sudo` for system processes.
+
+Run `stop --help` for the full flag list.
 
 ## Build from source
 
@@ -78,21 +49,8 @@ cargo build --release
 # binary at target/release/stop
 ```
 
-## Options
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-1, --once` | off | One-shot snapshot instead of continuous refresh |
-| `-i, --interval N` | 2 | Refresh interval in seconds |
-| `-n, --top N` | 5 | Processes shown per category |
-| `--json` | off | Output raw metrics + diagnosis as JSON |
-| `--no-color` | off | Disable ANSI color |
-
 ## License
 
-Dual-licensed under either of
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT) at your option.
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-- MIT license ([LICENSE-MIT](LICENSE-MIT))
-
-at your option.
+Source: https://github.com/adamatan/smart-top
